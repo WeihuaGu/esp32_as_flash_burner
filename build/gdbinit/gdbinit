@@ -1,0 +1,2 @@
+source /home/happ/project/esp/esp32_as_flash_burner/build/gdbinit/symbols
+source /home/happ/project/esp/esp32_as_flash_burner/build/gdbinit/connect
