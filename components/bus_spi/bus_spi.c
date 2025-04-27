@@ -4,6 +4,21 @@
 
 // 存储每个设备的句柄
 spi_device_handle_t spi_handles[SPI_DEVICE_MAX];
+int cs_nums[SPI_DEVICE_MAX];
+
+// 回调函数
+void cs_high(spi_transaction_t *trans) {
+    // 从 user 指针中获取 CS 引脚编号
+    int *cs_pin_num_ptr = (int *)trans->user;
+    int cs_pin_num = *cs_pin_num_ptr;
+    gpio_set_level(cs_pin_num, 1);
+}
+void cs_low(spi_transaction_t *trans) {
+    // 从 user 指针中获取 CS 引脚编号
+    int *cs_pin_num_ptr = (int *)trans->user;
+    int cs_pin_num = *cs_pin_num_ptr;
+    gpio_set_level(cs_pin_num, 0);
+}
 
 esp_err_t bus_spi_init(void) {
 
@@ -21,6 +36,8 @@ esp_err_t bus_spi_init(void) {
         .spics_io_num = FRAM_PIN_NUM_CS,         // CS pin
         .queue_size = 1,                      // Transaction queue size
 	.command_bits = 8,
+	.pre_cb = cs_low,
+        .post_cb = cs_high,
 
     };
     spi_device_interface_config_t devcfg_flash = {
@@ -29,7 +46,14 @@ esp_err_t bus_spi_init(void) {
         .spics_io_num = FLASH_PIN_NUM_CS,         // CS pin
         .queue_size = 1,                      // Transaction queue size
 	.command_bits = 8,
+	.pre_cb = cs_low,
+        .post_cb = cs_high,
     };
+    gpio_set_direction(FRAM_PIN_NUM_CS, GPIO_MODE_OUTPUT);
+    gpio_set_direction(FLASH_PIN_NUM_CS, GPIO_MODE_OUTPUT);
+    cs_nums[SPI_DEVICE_FRAM] = FRAM_PIN_NUM_CS;
+    cs_nums[SPI_DEVICE_FLASH] = FLASH_PIN_NUM_CS;
+
     // 初始化 SPI 总线
     esp_err_t ret = spi_bus_initialize(USE_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO);
     if (ret != ESP_OK) {
@@ -55,6 +79,7 @@ esp_err_t bus_spi_init(void) {
 esp_err_t only_one_cmd(int spidevice, uint8_t cmd, uint8_t* out_data, size_t out_len)
 {
     spi_transaction_t t = {
+	.user = &cs_nums[spidevice],
         .cmd = cmd,
         .length = 8,
         .rx_buffer = NULL,
@@ -69,6 +94,7 @@ esp_err_t only_one_cmd(int spidevice, uint8_t cmd, uint8_t* out_data, size_t out
     tx_dummy = (uint8_t*)malloc(out_len);
     memset(tx_dummy,0x00, out_len);
     spi_transaction_t rt = {
+	.user = &cs_nums[spidevice],
         .tx_buffer = tx_dummy,
         .length = out_len * 8,
         .rxlength = out_len * 8,
@@ -86,6 +112,7 @@ esp_err_t send_command_array(int spidevice, const uint8_t *commands, size_t comm
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));
+    t.user = &cs_nums[spidevice];
     t.length = command_len * 8;  // 每个字节8位
     t.tx_buffer = commands;
     t.rx_buffer = NULL;
@@ -105,6 +132,7 @@ esp_err_t send_command_array_withreturn(int spidevice, const uint8_t *commands, 
     esp_err_t ret;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));
+    t.user = &cs_nums[spidevice];
     t.tx_buffer = commands;
     t.length = command_len * 8;
     t.rx_buffer = NULL;
@@ -126,6 +154,7 @@ esp_err_t send_command_array_withreturn(int spidevice, const uint8_t *commands, 
     memset(tx_dummy,0x00, rx_len);
 
 
+    rt.user = &cs_nums[spidevice];
     rt.length = rx_len * 8;
     rt.tx_buffer = tx_dummy;
     rt.rxlength = rx_len * 8;
