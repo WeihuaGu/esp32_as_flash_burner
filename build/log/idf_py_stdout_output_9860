@@ -1,7 +1,0 @@
-[1/4] cd /home/happ/project/esp/esp32_as_flash_burner/build/esp-idf/esptool_py && /home/happ/.espressif/python_env/idf5.4_py3.13_env/bin/python /home/happ/software/esp/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/happ/project/esp/esp32_as_flash_burner/build/partition_table/partition-table.bin /home/happ/project/esp/esp32_as_flash_burner/build/esp32_as_flash_burner.bin
-esp32_as_flash_burner.bin binary size 0x33d30 bytes. Smallest app partition is 0x100000 bytes. 0xcc2d0 bytes (80%) free.
-[2/4] Performing build step for 'bootloader'
-[1/1] cd /home/happ/project/esp/esp32_as_flash_burner/build/bootloader/esp-idf/esptool_py && /home/happ/.espressif/python_env/idf5.4_py3.13_env/bin/python /home/happ/software/esp/esp-idf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 /home/happ/project/esp/esp32_as_flash_burner/build/bootloader/bootloader.bin
-Bootloader binary size 0x5160 bytes. 0x2ea0 bytes (36%) free.
-[3/4] No install step for 'bootloader'
-[4/4] Completed 'bootloader'
