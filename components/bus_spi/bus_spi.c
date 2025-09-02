@@ -49,20 +49,28 @@ esp_err_t send_command_array_withreturn(int spidevice, const uint8_t *commands, 
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));
 
-    size_t sum_size = command_len + rx_len;
+    size_t sum_size;
+    if(rx_data == NULL){
+	sum_size = command_len;
+    }
+    else{
+	sum_size = command_len + rx_len;
+    }
     // 在栈上创建联合缓冲区
     uint8_t tx_buffer[sum_size];
     uint8_t rx_buffer[sum_size];
 
      // 准备发送缓冲区
     memcpy(tx_buffer, commands, command_len);      // 拷贝命令部分
-    memset(tx_buffer + command_len, 0x00, rx_len); // 填充Dummy数据部分
+    if(rx_data != NULL)
+    	memset(tx_buffer + command_len, 0x00, rx_len); // 填充Dummy数据部分
 
     t.user = &cs_nums[spidevice];
     t.tx_buffer = tx_buffer;
-    t.rx_buffer = rx_buffer;
+    if(rx_data != NULL)
+    	t.rx_buffer = rx_buffer;
     t.length = sum_size * 8; // 计算总位数
-			     //
+			     
     printf("commands: ");
     for(int i=0;i<command_len;i++){
              printf("0x%02X ", tx_buffer[i]);
@@ -75,6 +83,7 @@ esp_err_t send_command_array_withreturn(int spidevice, const uint8_t *commands, 
         ESP_LOGE("SPI", "Failed to send command array: %s", esp_err_to_name(ret));
     }
 
+    if(rx_data != NULL){
     memcpy(rx_data,rx_buffer+command_len,rx_len);
 
     printf("returned rx_data: ");
@@ -82,8 +91,12 @@ esp_err_t send_command_array_withreturn(int spidevice, const uint8_t *commands, 
         printf("0x%02X ", rx_buffer[i]);
     }
     printf("\n");
+    }
 
     return ret;
+}
+esp_err_t send_command_array_noreturn(int spidevice, const uint8_t *commands, size_t command_len) {
+    return send_command_array_withreturn(spidevice, commands, command_len ,NULL ,0);
 }
 
 
