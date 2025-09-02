@@ -14,18 +14,8 @@
 
 static const char *TAG = "Tflash";
 
-// 读取 FRAM 数据
-//esp_err_t fram_read(uint16_t addr, uint8_t *data, size_t len);
-
-
-// 写入 FRAM 数据
-//esp_err_t fram_write(uint16_t addr, uint8_t *data, size_t len);
-
 
 void flash_test();
-
-
-
 
 
 #endif
